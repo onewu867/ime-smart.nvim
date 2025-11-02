@@ -64,16 +64,16 @@ vim.g.ime_smart_setup_opts = {
 - To force a custom location:
   ```lua
   vim.g.ime_smart_setup_opts = {
-    command = "C:/path/to/im-select.exe",
+    command = "/path/to/im-select/im-select-win/out/x64/im-select.exe",
   }
   ```
 
 ### WSL
-- Install `im-select.exe` on Windows and call it from WSL, e.g. `/mnt/c/Users/<name>/AppData/Local/nvim-data/im-select/im-select-win/out/x64/im-select.exe`.
+- Install `im-select.exe` on Windows and call it from WSL, e.g. `/mnt//path/to/im-select/im-select-win/out/x64/im-select.exe`.
 - Example configuration:
   ```lua
   vim.g.ime_smart_setup_opts = {
-    command = "/mnt/c/Users/<name>/AppData/Local/nvim-data/im-select/im-select-win/out/x64/im-select.exe",
+    command = "/mnt/path/to/im-select.exe",
     english_id = "1033",
     comment_id = "2052",
   }
