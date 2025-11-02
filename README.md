@@ -13,7 +13,7 @@ Smart IME switching for Neovim. Automatically toggles between English and Chines
 ### Lazy.nvim
 ```lua
 {
-  "your-name/ime-smart.nvim",
+  "onewu867/ime-smart.nvim",
   opts = {
     english_id = "1033",
     comment_id = "2052",
@@ -25,7 +25,7 @@ Smart IME switching for Neovim. Automatically toggles between English and Chines
 ### packer.nvim
 ```lua
 use {
-  "your-name/ime-smart.nvim",
+  "onewu867/ime-smart.nvim",
   config = function()
     require("ime_smart").setup {
       english_id = "1033",
@@ -37,7 +37,7 @@ use {
 
 ### vim-plug
 ```vim
-Plug 'your-name/ime-smart.nvim'
+Plug 'onewu867/ime-smart.nvim'
 let g:ime_smart_setup_opts = #{ english_id: '1033', comment_id: '2052' }
 ```
 
