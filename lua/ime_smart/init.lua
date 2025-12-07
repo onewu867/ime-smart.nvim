@@ -11,6 +11,9 @@ local state = {
   warned_job_failure = false,
 }
 
+-- 连接路径组件的函数
+-- 如果 vim.fs.joinpath 可用（Neovim 0.9+），则使用它
+-- 否则回退到使用当前系统的路径分隔符连接路径
 local function joinpath(...)
   if vim.fs and vim.fs.joinpath then
     return vim.fs.joinpath(...)
@@ -86,6 +89,39 @@ local function is_executable(path)
   return vim.fn.executable(path) == 1
 end
 
+-- 获取插件根目录路径
+local function get_plugin_root()
+  -- 方法1: 通过 runtimepath 查找插件目录
+  local runtime_files = vim.api.nvim_get_runtime_file("lua/ime_smart/init.lua", false)
+  if runtime_files and #runtime_files > 0 then
+    local plugin_file = runtime_files[1]
+    -- 从 lua/ime_smart/init.lua 向上两级到插件根目录
+    local plugin_root = normalize(vim.fn.fnamemodify(plugin_file, ":h:h"))
+    return plugin_root
+  end
+  
+  -- 方法2: 通过 debug.getinfo 获取当前文件路径
+  local ok, info = pcall(debug.getinfo, 1, "S")
+  if ok and info and info.source then
+    local source = info.source
+    -- source 格式可能是 @/path/to/file 或 =[C] 等
+    if source:sub(1, 1) == "@" then
+      local file_path = source:sub(2)
+      -- 转换为绝对路径
+      if not vim.fn.isabsolute(file_path) then
+        file_path = vim.fn.fnamemodify(file_path, ":p")
+      end
+      -- 从 lua/ime_smart/init.lua 向上两级到插件根目录
+      local plugin_root = normalize(vim.fn.fnamemodify(file_path, ":h:h"))
+      return plugin_root
+    end
+  end
+  
+  -- 方法3: 回退到 data_dir/lazy/ime-smart.nvim
+  local data_dir = normalize(vim.fn.stdpath("data"))
+  return normalize(joinpath(data_dir, "lazy", "ime-smart.nvim"))
+end
+
 local function candidate_paths()
   local candidates = {}
 
@@ -93,22 +129,63 @@ local function candidate_paths()
     table.insert(candidates, config.command)
   end
 
+  -- 获取插件根目录
+  local plugin_root = get_plugin_root()
+  
+  -- 插件内的 im-select.exe 路径（Windows）
+  local plugin_win_exe = normalize(
+    joinpath(plugin_root, "plugin", "im-select-win", "out", "x64", "im-select.exe")
+  )
+  
+  -- 插件内的 im-select 路径（macOS）
+  local plugin_mac_exe = normalize(
+    joinpath(plugin_root, "plugin", "im-select-mac", "out", "im-select")
+  )
+
+  -- Lazy.nvim 安装路径（Windows）
   local data_dir = normalize(vim.fn.stdpath("data"))
-  local win_candidate =
-    normalize(joinpath(data_dir, "im-select", "im-select-win", "out", "x64", "im-select.exe"))
-  local mac_candidate =
-    normalize(joinpath(data_dir, "im-select", "im-select-mac", "out", "im-select"))
-  local legacy_wsl = "../../plugin/im-select-win/out/x64/im-select.exe"
+  local lazy_win_candidate = normalize(
+    joinpath(
+      data_dir,
+      "lazy",
+      "ime-smart.nvim",
+      "plugin",
+      "im-select-win",
+      "out",
+      "x64",
+      "im-select.exe"
+    )
+  )
+  
+  -- Lazy.nvim 安装路径（macOS）
+  local lazy_mac_candidate = normalize(
+    joinpath(
+      data_dir,
+      "lazy",
+      "ime-smart.nvim",
+      "plugin",
+      "im-select-mac",
+      "out",
+      "im-select"
+    )
+  )
 
   if is_windows() then
-    table.insert(candidates, win_candidate)
+    -- 优先使用插件内路径（通过 get_plugin_root 获取，适用于所有插件管理器）
+    table.insert(candidates, plugin_win_exe)
+    -- Lazy.nvim 路径（作为备选）
+    table.insert(candidates, lazy_win_candidate)
+    -- PATH 中的可执行文件
     table.insert(candidates, "im-select.exe")
   elseif is_wsl() then
-    table.insert(candidates, legacy_wsl)
-    table.insert(candidates, win_candidate)
+    -- WSL 中也可以使用 Windows 路径
+    table.insert(candidates, plugin_win_exe)
+    table.insert(candidates, lazy_win_candidate)
     table.insert(candidates, "im-select.exe")
   else
-    table.insert(candidates, mac_candidate)
+    -- macOS/Linux
+    table.insert(candidates, plugin_mac_exe)
+    table.insert(candidates, lazy_mac_candidate)
     table.insert(candidates, "im-select")
   end
 
