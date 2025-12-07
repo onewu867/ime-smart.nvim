@@ -94,9 +94,11 @@ local function candidate_paths()
   end
 
   local data_dir = normalize(vim.fn.stdpath("data"))
-  local win_candidate = normalize(joinpath(data_dir, "im-select", "im-select-win", "out", "x64", "im-select.exe"))
-  local mac_candidate = normalize(joinpath(data_dir, "im-select", "im-select-mac", "out", "im-select"))
-  local legacy_wsl = "../../nvim-data/im-select/im-select-win/out/x64/im-select.exe"
+  local win_candidate =
+    normalize(joinpath(data_dir, "im-select", "im-select-win", "out", "x64", "im-select.exe"))
+  local mac_candidate =
+    normalize(joinpath(data_dir, "im-select", "im-select-mac", "out", "im-select"))
+  local legacy_wsl = "../../plugin/im-select-win/out/x64/im-select.exe"
 
   if is_windows() then
     table.insert(candidates, win_candidate)
@@ -163,7 +165,10 @@ local function set_ime(id)
   if not job or job <= 0 then
     if not state.warned_job_failure then
       state.warned_job_failure = true
-      notify(("Failed to run im-select for id %s (job id: %s)"):format(id, tostring(job)), vim.log.levels.WARN)
+      notify(
+        ("Failed to run im-select for id %s (job id: %s)"):format(id, tostring(job)),
+        vim.log.levels.WARN
+      )
     end
     return
   end
@@ -202,7 +207,8 @@ local function ts_get_node(row, col)
   end
 
   if vim.treesitter.get_node then
-    local ok_get, node = pcall(vim.treesitter.get_node, { bufnr = 0, pos = { row, col }, parser = parser })
+    local ok_get, node =
+      pcall(vim.treesitter.get_node, { bufnr = 0, pos = { row, col }, parser = parser })
     if ok_get and node then
       return node
     end
@@ -242,10 +248,19 @@ local function in_comment_or_string()
         return false
       end
       local tl = string.lower(t)
-      if tl:find("string", 1, true) or tl:find("template", 1, true) or tl:find("regex", 1, true) then
+      if
+        tl:find("string", 1, true)
+        or tl:find("template", 1, true)
+        or tl:find("regex", 1, true)
+      then
         return true
       end
-      if tl:find("comment", 1, true) or tl:find("doc", 1, true) or tl:find("documentation", 1, true) or tl:find("annotation", 1, true) then
+      if
+        tl:find("comment", 1, true)
+        or tl:find("doc", 1, true)
+        or tl:find("documentation", 1, true)
+        or tl:find("annotation", 1, true)
+      then
         return true
       end
       return false
@@ -531,4 +546,3 @@ function M.setup(opts)
 end
 
 return M
-
